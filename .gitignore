@@ -1,0 +1,91 @@
+# ============================================
+# 🚫 Git 무시 파일 목록
+# ============================================
+
+# ===== 데이터 관련 (용량이 크므로 절대 Git에 올리지 않음) =====
+data/
+*.png
+*.jpg
+*.jpeg
+*.dcm
+*.nii
+*.nii.gz
+
+# ===== 학습된 모델 가중치 =====
+saved_models/
+checkpoints/
+*.pt
+*.pth
+*.onnx
+*.h5
+
+# ===== 결과 파일 =====
+outputs/
+results/
+*.csv
+!sample_submission.csv
+
+# ===== Python 관련 =====
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+
+# ===== 가상환경 =====
+venv/
+env/
+ENV/
+.venv/
+
+# ===== Jupyter Notebook =====
+.ipynb_checkpoints/
+*.ipynb_checkpoints
+
+# ===== IDE 관련 =====
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+.project
+.pydevproject
+.settings/
+
+# ===== OS 관련 =====
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# ===== 로그 파일 =====
+logs/
+*.log
+wandb/
+mlruns/
+tensorboard/
+
+# ===== 기타 =====
+.env
+.env.local
+*.tmp
+*.temp
+

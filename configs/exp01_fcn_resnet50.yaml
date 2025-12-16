@@ -1,0 +1,93 @@
+# ============================================
+# 🧪 실험 01: FCN ResNet50 Baseline
+# ============================================
+# 기본 FCN ResNet50 모델로 학습하는 베이스라인 실험
+
+experiment:
+  name: "exp01_fcn_resnet50"
+  description: "FCN ResNet50 baseline with BCE loss"
+  author: "team"
+
+data:
+  train_image_root: "../Segmentation/train/DCM"
+  train_label_root: "../Segmentation/train/outputs_json"
+  test_image_root: "../Segmentation/test/DCM"
+
+classes:
+  - 'finger-1'
+  - 'finger-2'
+  - 'finger-3'
+  - 'finger-4'
+  - 'finger-5'
+  - 'finger-6'
+  - 'finger-7'
+  - 'finger-8'
+  - 'finger-9'
+  - 'finger-10'
+  - 'finger-11'
+  - 'finger-12'
+  - 'finger-13'
+  - 'finger-14'
+  - 'finger-15'
+  - 'finger-16'
+  - 'finger-17'
+  - 'finger-18'
+  - 'finger-19'
+  - 'Trapezium'
+  - 'Trapezoid'
+  - 'Capitate'
+  - 'Hamate'
+  - 'Scaphoid'
+  - 'Lunate'
+  - 'Triquetrum'
+  - 'Pisiform'
+  - 'Radius'
+  - 'Ulna'
+
+model:
+  name: "fcn_resnet50"
+  pretrained: true
+
+image:
+  size: 512
+  original_size: 2048
+
+loss:
+  name: "bce"
+
+training:
+  epochs: 50
+  batch_size: 8
+  learning_rate: 0.0001
+  weight_decay: 0.000001
+  optimizer: "adam"
+  scheduler: null
+  val_every: 5
+  num_workers: 4
+  n_splits: 5
+  fold: 0
+
+seed: 42
+
+save:
+  dir: "saved_models/exp01_fcn_resnet50"
+  model_name: "best_model.pt"
+
+inference:
+  threshold: 0.5
+  batch_size: 2
+  output_csv: "exp01_output.csv"
+
+augmentation:
+  train:
+    resize: 512
+    horizontal_flip: false
+    vertical_flip: false
+    rotate: false
+    rotate_limit: 15
+    brightness_contrast: false
+    elastic_transform: false
+    grid_distortion: false
+  valid:
+    resize: 512
+

@@ -1,0 +1,120 @@
+# ============================================
+# ⚙️ 기본 설정 파일 (Base Config)
+# ============================================
+# 이 파일을 복사하여 실험별 설정 파일을 만드세요.
+# 예: exp01_loss_experiment.yaml, exp02_augmentation.yaml
+
+# 📝 실험 정보
+experiment:
+  name: "baseline"                    # 실험 이름 (저장 폴더명으로 사용)
+  description: "Baseline FCN ResNet50"  # 실험 설명
+  author: "your_name"                 # 실험자 이름
+
+# 📂 데이터 경로
+data:
+  train_image_root: "../Segmentation/train/DCM"      # 학습 이미지 경로
+  train_label_root: "../Segmentation/train/outputs_json"  # 학습 라벨 경로
+  test_image_root: "../Segmentation/test/DCM"        # 테스트 이미지 경로
+
+# 🏷️ 클래스 정보
+classes:
+  - 'finger-1'
+  - 'finger-2'
+  - 'finger-3'
+  - 'finger-4'
+  - 'finger-5'
+  - 'finger-6'
+  - 'finger-7'
+  - 'finger-8'
+  - 'finger-9'
+  - 'finger-10'
+  - 'finger-11'
+  - 'finger-12'
+  - 'finger-13'
+  - 'finger-14'
+  - 'finger-15'
+  - 'finger-16'
+  - 'finger-17'
+  - 'finger-18'
+  - 'finger-19'
+  - 'Trapezium'
+  - 'Trapezoid'
+  - 'Capitate'
+  - 'Hamate'
+  - 'Scaphoid'
+  - 'Lunate'
+  - 'Triquetrum'
+  - 'Pisiform'
+  - 'Radius'
+  - 'Ulna'
+
+# 🏗️ 모델 설정
+model:
+  name: "fcn_resnet50"               # 모델 이름 (fcn_resnet50, deeplabv3_resnet101 등)
+  pretrained: true                    # 사전학습 가중치 사용 여부
+
+# 📏 이미지 크기
+image:
+  size: 512                           # 학습 이미지 크기 (512x512)
+  original_size: 2048                 # 원본 이미지 크기 (추론시 복원용)
+
+# 📉 Loss 설정
+loss:
+  name: "bce"                         # Loss 함수 (bce, dice, bce_dice, focal, tversky)
+  # BCE + Dice 조합 사용시
+  # bce_weight: 0.5
+  # dice_weight: 0.5
+  # Focal Loss 사용시
+  # alpha: 0.25
+  # gamma: 2.0
+
+# 🎓 학습 설정
+training:
+  epochs: 50                          # 총 에폭 수
+  batch_size: 8                       # 배치 크기
+  learning_rate: 0.0001               # 학습률
+  weight_decay: 0.000001              # 가중치 감쇠
+  optimizer: "adam"                   # 옵티마이저 (adam, adamw, sgd)
+  scheduler: null                     # 스케줄러 (null, cosine, step)
+  
+  # 검증 설정
+  val_every: 5                        # 몇 에폭마다 검증할지
+  
+  # DataLoader 설정
+  num_workers: 4                      # 데이터 로딩 워커 수
+  
+  # K-Fold 설정
+  n_splits: 5                         # K-Fold 분할 수
+  fold: 0                             # 사용할 fold 번호
+
+# 🎲 시드 설정
+seed: 42                              # 재현성을 위한 시드
+
+# 💾 저장 설정
+save:
+  dir: "saved_models"                 # 모델 저장 디렉토리
+  model_name: "best_model.pt"         # 저장할 모델 파일명
+
+# 🔮 추론 설정
+inference:
+  threshold: 0.5                      # 이진화 임계값
+  batch_size: 2                       # 추론 배치 크기
+  output_csv: "output.csv"            # 결과 CSV 파일명
+
+# 🔄 Augmentation 설정
+augmentation:
+  # 학습시 적용할 augmentation
+  train:
+    resize: 512
+    horizontal_flip: false            # X-ray는 좌우 대칭이 의미 있으므로 주의
+    vertical_flip: false
+    rotate: false
+    rotate_limit: 15
+    brightness_contrast: false
+    elastic_transform: false
+    grid_distortion: false
+    
+  # 검증/테스트시 적용할 augmentation
+  valid:
+    resize: 512
+

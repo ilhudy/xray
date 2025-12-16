@@ -1,0 +1,38 @@
+# ============================================
+# 📦 필수 라이브러리 목록
+# ============================================
+# 설치 방법: pip install -r requirements.txt
+
+# PyTorch (CUDA 버전에 맞게 설치 필요)
+# GPU 사용시: pip install torch torchvision --index-url https://download.pytorch.org/whl/cu118
+torch>=2.0.0
+torchvision>=0.15.0
+
+# 이미지 처리
+opencv-python-headless==4.10.0.84
+albumentations==1.4.18
+Pillow>=9.0.0
+
+# 데이터 처리
+numpy>=1.24.0
+pandas==2.2.3
+scikit-learn==1.5.2
+
+# 설정 파일 관리
+PyYAML>=6.0
+omegaconf>=2.3.0
+
+# 시각화
+matplotlib==3.9.2
+seaborn>=0.12.0
+
+# 진행률 표시
+tqdm>=4.65.0
+
+# 실험 로깅 (선택사항)
+# wandb>=0.15.0
+# tensorboard>=2.13.0
+
+# Segmentation 모델 (선택사항 - 추가 모델 사용시)
+# segmentation-models-pytorch>=0.3.3
+
