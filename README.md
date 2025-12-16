@@ -106,8 +106,21 @@ python main.py --config configs/exp03_augmentation.yaml --mode train
 ### 추론 실행
 
 ```bash
-# 학습된 모델로 추론
+# 방법 1: main.py 사용 (config 파일 필요)
 python main.py --config configs/exp01_fcn_resnet50.yaml --mode inference
+
+# 방법 2: inference.py 사용 (더 간단!)
+python inference.py --config configs/exp01_fcn_resnet50.yaml
+
+# 방법 3: 모델 경로 직접 지정
+python inference.py --model saved_models/exp01/best_model.pt --output output.csv
+
+# 방법 4: 상세 옵션 지정
+python inference.py --model saved_models/exp01/best_model.pt \
+                    --model_name fcn_resnet50 \
+                    --test_root data/test/DCM \
+                    --output my_submission.csv \
+                    --threshold 0.5
 ```
 
 ### 학습 + 추론 한번에
@@ -393,6 +406,51 @@ exp04_scheduler_cosine.yaml   # 스케줄러 실험
 | Best Dice | 0.9523 |
 | 학습 시간 | 2시간 |
 | 특이사항 | epoch 30에서 수렴 |
+
+---
+
+## 🏆 대회 제출용 CSV 생성
+
+### 1. 학습 완료 후 CSV 생성
+
+```bash
+# Config 파일 사용 (권장)
+python inference.py --config configs/exp01_fcn_resnet50.yaml
+
+# 또는 직접 모델 경로 지정
+python inference.py --model saved_models/exp01/best_model.pt \
+                    --output submission.csv
+```
+
+### 2. inference.py 옵션 설명
+
+| 옵션 | 설명 | 기본값 |
+|------|------|--------|
+| `--config` | Config yaml 파일 경로 | - |
+| `--model` | 학습된 모델 파일 (.pt) | - |
+| `--model_name` | 모델 이름 | fcn_resnet50 |
+| `--test_root` | 테스트 이미지 경로 | data/test/DCM |
+| `--output` | 출력 CSV 파일명 | output.csv |
+| `--image_size` | 입력 이미지 크기 | 512 |
+| `--threshold` | 이진화 임계값 | 0.5 |
+| `--batch_size` | 배치 크기 | 2 |
+
+### 3. 출력 CSV 형식
+
+```csv
+image_name,class,rle
+image001.png,finger-1,1 5 10 3 ...
+image001.png,finger-2,20 8 35 12 ...
+...
+```
+
+### 4. 제출 체크리스트
+
+- [ ] 테스트 데이터 경로가 올바른가? (`data/test/DCM`)
+- [ ] 학습된 모델 파일(.pt)이 존재하는가?
+- [ ] 모델 이름(`--model_name`)이 학습 때와 동일한가?
+- [ ] CSV 파일이 정상적으로 생성되었는가?
+- [ ] CSV 파일 크기가 적절한가? (빈 파일 아닌지)
 
 ---
 
