@@ -299,8 +299,29 @@ wandb:
 | `val/loss` | 검증 loss |
 | `val/dice` | 검증 평균 Dice |
 | `val_dice/{class}` | 클래스별 Dice |
+| `val/predictions` | 🖼️ **시각화 이미지** (Input, GT, Prediction) |
 | `best_dice` | 최고 Dice (summary) |
 | `best_epoch` | 최고 성능 에폭 (summary) |
+
+### 5-1. 🖼️ Validation 시각화
+
+validation마다 자동으로 예측 결과가 WandB에 이미지로 로깅됩니다!
+
+**시각화되는 내용:**
+- **Input**: 원본 X-Ray 이미지
+- **Ground Truth**: 실제 정답 마스크 (색상별 클래스)
+- **Prediction**: 모델 예측 마스크
+
+**확인 방법:**
+1. WandB 대시보드 접속
+2. 해당 run 클릭
+3. **Media** 탭 또는 **Charts** → `val/predictions` 확인
+
+**시각화 샘플 수 조절:**
+```yaml
+wandb:
+  num_vis_samples: 4    # 0으로 설정하면 시각화 안함
+```
 
 ### 6. WandB 끄기
 

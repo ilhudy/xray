@@ -81,6 +81,7 @@ wandb:
   name: "gh_fcn_bce_dice"             # 본인 이니셜_모델_loss 형식
   tags: ["loss_experiment", "bce_dice"]
   notes: "BCE + Dice Loss 조합 실험"
+  num_vis_samples: 4                  # validation 시각화 샘플 수
 
 save:
   dir: "saved_models/exp02_loss_bce_dice"

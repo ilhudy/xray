@@ -77,6 +77,7 @@ wandb:
   name: "gh_fcn_resnet50_baseline"    # 본인 이니셜_모델_설명 형식
   tags: ["baseline", "fcn_resnet50"]
   notes: "FCN ResNet50 베이스라인 실험"
+  num_vis_samples: 4                  # validation 시각화 샘플 수
 
 save:
   dir: "saved_models/exp01_fcn_resnet50"

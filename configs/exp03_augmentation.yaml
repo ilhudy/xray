@@ -77,6 +77,7 @@ wandb:
   name: "gh_fcn_augmentation"         # 본인 이니셜_모델_설명 형식
   tags: ["augmentation", "rotate", "elastic"]
   notes: "다양한 Augmentation 적용 실험"
+  num_vis_samples: 4                  # validation 시각화 샘플 수
 
 save:
   dir: "saved_models/exp03_augmentation"

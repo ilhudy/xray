@@ -47,6 +47,8 @@ from src.utils import (
     print_model_info,
     save_model,
     set_seed,
+    label2rgb,
+    PALETTE,
 )
 
 
@@ -180,7 +182,7 @@ def get_scheduler(optimizer, config: dict):
         raise ValueError(f"Unknown scheduler: {scheduler_name}")
 
 
-def validation(epoch, model, data_loader, criterion, classes, device, thr=0.5, use_wandb=False):
+def validation(epoch, model, data_loader, criterion, classes, device, thr=0.5, use_wandb=False, num_vis_samples=4):
     """검증 수행"""
     print(f"\n🔍 Validation #{epoch}")
     model.eval()
@@ -189,8 +191,13 @@ def validation(epoch, model, data_loader, criterion, classes, device, thr=0.5, u
     total_loss = 0
     cnt = 0
     
+    # 시각화를 위한 샘플 저장
+    vis_images = []
+    vis_masks_gt = []
+    vis_masks_pred = []
+    
     with torch.no_grad():
-        for images, masks in tqdm(data_loader, desc="Validating"):
+        for batch_idx, (images, masks) in enumerate(tqdm(data_loader, desc="Validating")):
             images, masks = images.to(device), masks.to(device)
             
             outputs = model(images)["out"]
@@ -211,6 +218,13 @@ def validation(epoch, model, data_loader, criterion, classes, device, thr=0.5, u
             
             dice = dice_coef(outputs, masks)
             dices.append(dice.cpu())
+            
+            # 시각화 샘플 수집 (첫 배치에서만)
+            if batch_idx == 0 and use_wandb and WANDB_AVAILABLE:
+                for i in range(min(num_vis_samples, images.size(0))):
+                    vis_images.append(images[i].cpu())
+                    vis_masks_gt.append(masks[i].cpu())
+                    vis_masks_pred.append(outputs[i].cpu())
     
     dices = torch.cat(dices, 0)
     dices_per_class = torch.mean(dices, 0)
@@ -237,6 +251,36 @@ def validation(epoch, model, data_loader, criterion, classes, device, thr=0.5, u
         }
         # 클래스별 dice도 로깅
         log_dict.update(class_dice_dict)
+        
+        # 시각화 이미지 로깅
+        wandb_images = []
+        for i, (img, gt, pred) in enumerate(zip(vis_images, vis_masks_gt, vis_masks_pred)):
+            # 이미지 변환 (C, H, W) -> (H, W, C)
+            img_np = img.permute(1, 2, 0).numpy()
+            img_np = (img_np * 255).astype(np.uint8)
+            
+            # 마스크를 RGB로 변환
+            gt_np = gt.numpy()  # (C, H, W)
+            pred_np = pred.numpy()  # (C, H, W)
+            
+            gt_rgb = label2rgb(gt_np)
+            pred_rgb = label2rgb(pred_np)
+            
+            # WandB 이미지 생성 (원본, GT, 예측 비교)
+            wandb_images.append(wandb.Image(
+                img_np,
+                caption=f"Sample {i+1} - Input"
+            ))
+            wandb_images.append(wandb.Image(
+                gt_rgb,
+                caption=f"Sample {i+1} - Ground Truth"
+            ))
+            wandb_images.append(wandb.Image(
+                pred_rgb,
+                caption=f"Sample {i+1} - Prediction"
+            ))
+        
+        log_dict["val/predictions"] = wandb_images
         wandb.log(log_dict)
     
     return avg_dice
@@ -372,9 +416,10 @@ def train(config: dict, device: str):
         
         # 검증
         if (epoch + 1) % val_every == 0:
+            num_vis_samples = config.get("wandb", {}).get("num_vis_samples", 4)
             dice = validation(
                 epoch + 1, model, valid_loader, criterion, classes, device,
-                use_wandb=use_wandb
+                use_wandb=use_wandb, num_vis_samples=num_vis_samples
             )
             
             if dice > best_dice:

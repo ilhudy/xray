@@ -8,13 +8,13 @@
 experiment:
   name: "baseline"                    # 실험 이름 (저장 폴더명으로 사용)
   description: "Baseline FCN ResNet50"  # 실험 설명
-  author: "your_name"                 # 실험자 이름
+  author: "gh"                 # 실험자 이름
 
 # 📂 데이터 경로
 data:
-  train_image_root: "../Segmentation/train/DCM"      # 학습 이미지 경로
-  train_label_root: "../Segmentation/train/outputs_json"  # 학습 라벨 경로
-  test_image_root: "../Segmentation/test/DCM"        # 테스트 이미지 경로
+  train_image_root: "data/train/DCM"      # 학습 이미지 경로
+  train_label_root: "data/train/outputs_json"  # 학습 라벨 경로
+  test_image_root: "data/test/DCM"        # 테스트 이미지 경로
 
 # 🏷️ 클래스 정보
 classes:
@@ -99,6 +99,7 @@ wandb:
                                       # 예: gh_fcn_resnet50_epoch50, jh_deeplabv3_bce_dice
   tags: []                            # 태그 (선택사항): ["baseline", "fcn", "bce"]
   notes: ""                           # 실험 메모 (선택사항)
+  num_vis_samples: 4                  # validation시 시각화할 샘플 수 (0이면 시각화 안함)
 
 # 💾 저장 설정
 save:
