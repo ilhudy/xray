@@ -73,6 +73,15 @@ training:
 
 seed: 42
 
+# 📊 WandB 설정
+wandb:
+  enabled: true
+  entity: "let_cv_03"
+  project: "segmentation"
+  name: "gh_fcn_bce_dice"             # 본인 이니셜_모델_loss 형식
+  tags: ["loss_experiment", "bce_dice"]
+  notes: "BCE + Dice Loss 조합 실험"
+
 save:
   dir: "saved_models/exp02_loss_bce_dice"
   model_name: "best_model.pt"

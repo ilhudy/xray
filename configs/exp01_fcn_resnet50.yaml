@@ -69,6 +69,15 @@ training:
 
 seed: 42
 
+# 📊 WandB 설정
+wandb:
+  enabled: true
+  entity: "let_cv_03"
+  project: "segmentation"
+  name: "gh_fcn_resnet50_baseline"    # 본인 이니셜_모델_설명 형식
+  tags: ["baseline", "fcn_resnet50"]
+  notes: "FCN ResNet50 베이스라인 실험"
+
 save:
   dir: "saved_models/exp01_fcn_resnet50"
   model_name: "best_model.pt"

@@ -29,6 +29,14 @@ import yaml
 from torch.utils.data import DataLoader
 from tqdm import tqdm
 
+# WandB 로깅
+try:
+    import wandb
+    WANDB_AVAILABLE = True
+except ImportError:
+    WANDB_AVAILABLE = False
+    print("⚠️ wandb not installed. Logging disabled.")
+
 from src.dataset import XRayDataset, XRayInferenceDataset
 from src.losses import get_loss
 from src.models import get_model
@@ -48,6 +56,63 @@ def load_config(config_path: str) -> dict:
         config = yaml.safe_load(f)
     print(f"📄 Config loaded from {config_path}")
     return config
+
+
+def init_wandb(config: dict):
+    """WandB 초기화"""
+    wandb_config = config.get("wandb", {})
+    
+    if not wandb_config.get("enabled", False):
+        print("📊 WandB logging disabled")
+        return False
+    
+    if not WANDB_AVAILABLE:
+        print("⚠️ WandB not available. Install with: pip install wandb")
+        return False
+    
+    # wandb 초기화
+    wandb.init(
+        entity=wandb_config.get("entity", "let_cv_03"),
+        project=wandb_config.get("project", "segmentation"),
+        name=wandb_config.get("name", config["experiment"]["name"]),
+        config={
+            # 실험 정보
+            "experiment_name": config["experiment"]["name"],
+            "author": config["experiment"]["author"],
+            "description": config["experiment"]["description"],
+            # 모델 설정
+            "model": config["model"]["name"],
+            "pretrained": config["model"]["pretrained"],
+            # 학습 설정
+            "epochs": config["training"]["epochs"],
+            "batch_size": config["training"]["batch_size"],
+            "learning_rate": config["training"]["learning_rate"],
+            "optimizer": config["training"].get("optimizer", "adam"),
+            "scheduler": config["training"].get("scheduler"),
+            # Loss 설정
+            "loss": config["loss"]["name"],
+            # 이미지 설정
+            "image_size": config["image"]["size"],
+            # Augmentation
+            "augmentation": config["augmentation"]["train"],
+            # 기타
+            "seed": config.get("seed", 42),
+            "fold": config["training"]["fold"],
+            "n_splits": config["training"]["n_splits"],
+        },
+        tags=wandb_config.get("tags", []),
+        notes=wandb_config.get("notes", ""),
+    )
+    
+    print(f"📊 WandB initialized: {wandb_config.get('project')}/{wandb_config.get('name')}")
+    return True
+
+
+def finish_wandb(use_wandb: bool):
+    """WandB 종료"""
+    if use_wandb and WANDB_AVAILABLE:
+        wandb.finish()
+        print("📊 WandB run finished")
 
 
 def get_transforms(config: dict, is_train: bool = True):
@@ -115,7 +180,7 @@ def get_scheduler(optimizer, config: dict):
         raise ValueError(f"Unknown scheduler: {scheduler_name}")
 
 
-def validation(epoch, model, data_loader, criterion, classes, device, thr=0.5):
+def validation(epoch, model, data_loader, criterion, classes, device, thr=0.5, use_wandb=False):
     """검증 수행"""
     print(f"\n🔍 Validation #{epoch}")
     model.eval()
@@ -152,14 +217,27 @@ def validation(epoch, model, data_loader, criterion, classes, device, thr=0.5):
     
     # 클래스별 Dice 출력
     print("\n📊 Class-wise Dice Scores:")
+    class_dice_dict = {}
     for c, d in zip(classes, dices_per_class):
         print(f"  {c:<15}: {d.item():.4f}")
+        class_dice_dict[f"val_dice/{c}"] = d.item()
     
     avg_dice = torch.mean(dices_per_class).item()
     avg_loss = total_loss / cnt
     
     print(f"\n📈 Average Dice: {avg_dice:.4f}")
     print(f"📉 Average Loss: {avg_loss:.4f}")
+    
+    # WandB 로깅
+    if use_wandb and WANDB_AVAILABLE:
+        log_dict = {
+            "val/loss": avg_loss,
+            "val/dice": avg_dice,
+            "epoch": epoch,
+        }
+        # 클래스별 dice도 로깅
+        log_dict.update(class_dice_dict)
+        wandb.log(log_dict)
     
     return avg_dice
 
@@ -169,6 +247,9 @@ def train(config: dict, device: str):
     print("\n" + "=" * 60)
     print("🎓 TRAINING START")
     print("=" * 60)
+    
+    # WandB 초기화
+    use_wandb = init_wandb(config)
     
     # 설정 추출
     classes = config["classes"]
@@ -225,6 +306,10 @@ def train(config: dict, device: str):
     model = model.to(device)
     print_model_info(model, config["model"]["name"])
     
+    # WandB에 모델 구조 로깅
+    if use_wandb and WANDB_AVAILABLE:
+        wandb.watch(model, log="all", log_freq=100)
+    
     # Loss, Optimizer, Scheduler 설정
     loss_config = config.get("loss", {})
     loss_name = loss_config.get("name", "bce")
@@ -260,17 +345,36 @@ def train(config: dict, device: str):
             
             epoch_loss += loss.item()
             pbar.set_postfix({"loss": f"{loss.item():.4f}"})
+            
+            # WandB step 로깅 (매 step)
+            if use_wandb and WANDB_AVAILABLE:
+                wandb.log({
+                    "train/step_loss": loss.item(),
+                    "train/step": epoch * len(train_loader) + step,
+                })
         
         if scheduler is not None:
             scheduler.step()
+            # 현재 learning rate 로깅
+            if use_wandb and WANDB_AVAILABLE:
+                current_lr = optimizer.param_groups[0]['lr']
+                wandb.log({"train/learning_rate": current_lr, "epoch": epoch + 1})
         
         avg_epoch_loss = epoch_loss / len(train_loader)
         print(f"\n📊 Epoch {epoch + 1} - Average Loss: {avg_epoch_loss:.4f}")
         
+        # WandB epoch 로깅
+        if use_wandb and WANDB_AVAILABLE:
+            wandb.log({
+                "train/epoch_loss": avg_epoch_loss,
+                "epoch": epoch + 1,
+            })
+        
         # 검증
         if (epoch + 1) % val_every == 0:
             dice = validation(
-                epoch + 1, model, valid_loader, criterion, classes, device
+                epoch + 1, model, valid_loader, criterion, classes, device,
+                use_wandb=use_wandb
             )
             
             if dice > best_dice:
@@ -281,6 +385,14 @@ def train(config: dict, device: str):
                     config["save"]["dir"],
                     config["save"]["model_name"],
                 )
+                
+                # WandB에 best 모델 저장
+                if use_wandb and WANDB_AVAILABLE:
+                    wandb.run.summary["best_dice"] = best_dice
+                    wandb.run.summary["best_epoch"] = epoch + 1
+    
+    # WandB 종료
+    finish_wandb(use_wandb)
     
     print("\n" + "=" * 60)
     print(f"🏆 Training Complete! Best Dice: {best_dice:.4f}")

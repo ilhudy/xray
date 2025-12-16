@@ -69,6 +69,15 @@ training:
 
 seed: 42
 
+# 📊 WandB 설정
+wandb:
+  enabled: true
+  entity: "let_cv_03"
+  project: "segmentation"
+  name: "gh_fcn_augmentation"         # 본인 이니셜_모델_설명 형식
+  tags: ["augmentation", "rotate", "elastic"]
+  notes: "다양한 Augmentation 적용 실험"
+
 save:
   dir: "saved_models/exp03_augmentation"
   model_name: "best_model.pt"

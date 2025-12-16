@@ -90,6 +90,16 @@ training:
 # 🎲 시드 설정
 seed: 42                              # 재현성을 위한 시드
 
+# 📊 WandB 설정
+wandb:
+  enabled: true                       # wandb 사용 여부 (false로 끄면 로깅 안함)
+  entity: "let_cv_03"                 # wandb 팀/entity 이름
+  project: "segmentation"             # wandb 프로젝트 이름
+  name: "gh_baseline_model"           # 실험 이름 (이니셜_모델_정보 형식 권장)
+                                      # 예: gh_fcn_resnet50_epoch50, jh_deeplabv3_bce_dice
+  tags: []                            # 태그 (선택사항): ["baseline", "fcn", "bce"]
+  notes: ""                           # 실험 메모 (선택사항)
+
 # 💾 저장 설정
 save:
   dir: "saved_models"                 # 모델 저장 디렉토리
